@@ -4,103 +4,112 @@ const Gameboard = (function (MAX_LENGTH) {
   const numberOfCells = Math.pow(MAX_LENGTH, 2);
 
   // Initialise gameboard with new cell objects
-  const board = [];
-  for (let cell = 0; cell < numberOfCells; cell++) {
-    board.push(newGameboardCell());
+  const gameboardCells = [];
+  for (let cellIndex = 0; cellIndex < numberOfCells; cellIndex++) {
+    gameboardCells.push(newGameboardCell());
   }
 
   // Play "X" and "O"
-  function play(atIndex, withMarker) {
+  function playOnCell(cellIndex, playerMarker) {
     // Check valid index
-    if (atIndex < numberOfCells) {
+    if (cellIndex < numberOfCells) {
       // Get cell instance
-      const cell = board[atIndex];
+      const cell = gameboardCells[cellIndex];
 
-      // Check if cell is unmarked
-      if (!cell.hasMark()) {
-        // Mark cell with value
-        cell.markCell(withMarker);
-      }
+      // Mark cell with value
+      cell.markCell(playerMarker);
     }
   }
 
   // Return current gameboard cells
-  function display() {
-    console.log("Current gameboard:");
-    let displayString = "";
+  function getCells() {
+    let cells = gameboardCells.map(__gameboardCellsWithMark);
 
-    // Create display string
-    board.forEach(function (cell, cellIndex) {
-      // Make rows by inserting line breaks
-      if (cellIndex !== 0 && cellIndex % MAX_LENGTH === 0) {
-        displayString += "\n";
-      }
+    // Return gameboard cells
+    return cells;
+  }
 
-      // Check if cell is marked
-      if (cell.hasMark()) {
-        displayString += cell.getMark() + " ";
-      } else {
-        displayString += "_ ";
-      }
-    });
+  function __gameboardCellsWithMark(gameboardCell, cellIndex) {
+    const cellNumber = cellIndex + 1;
+    const cellMark = gameboardCell.getMark() ? gameboardCell.getMark() : " ";
 
-    // Display gameboard
-    console.log(displayString);
+    return `${cellNumber}: ${cellMark}`;
   }
 
   // Reset gameboard
-  function reset() {
-    for (const cell of board) {
+  function resetCellMarks() {
+    for (const cell of gameboardCells) {
       cell.resetCell();
     }
   }
 
-  return { play, display, reset };
+  return { playOnCell, getCells, resetCellMarks };
 })(3);
 
 // Gameboard cell object
 function newGameboardCell() {
-  let mark = "";
+  let cellMark = "";
   const VALID_MARKERS = /x|o/i;
 
   // Change mark (here, valid marks are 0, 1, and 2)
-  function markCell(marker) {
-    if (marker.match(VALID_MARKERS)) {
-      mark = marker.toUpperCase();
+  function markCell(playerMarker) {
+    if (!cellMark && playerMarker.match(VALID_MARKERS)) {
+      cellMark = playerMarker.toUpperCase();
     }
-  }
-
-  // Check if cell is marked
-  function hasMark() {
-    if (mark) {
-      return true;
-    }
-
-    return false;
   }
 
   // Get current cell value
   function getMark() {
-    if (this.hasMark) {
-      return mark;
-    }
+    return cellMark;
   }
 
   // Reset cell
   function resetCell() {
-    if (this.hasMark) {
-      mark = "";
+    if (cellMark) {
+      cellMark = "";
     }
   }
 
-  return { markCell, hasMark, getMark, resetCell };
+  return { markCell, getMark, resetCell };
 }
 
-Gameboard.play(3, "x");
-Gameboard.play(8, "o");
+// New player object
+function newPlayer(playerName, index) {
+  const name = playerName;
+  let playerMarker = "";
 
-Gameboard.display();
+  // Assign player mark using index
+  if (index === 0) {
+    playerMarker = "X";
+  } else if (index === 1) {
+    playerMarker = "O";
+  }
 
-Gameboard.reset();
+  // Get player
+  function getName() {
+    return name;
+  }
 
-Gameboard.display();
+  // Play on the gameboard
+  function markOnGameboardCell(cellIndex) {
+    if (playerMarker) {
+      Gameboard.playOnCell(cellIndex, playerMarker);
+    }
+  }
+
+  return { getName, markOnGameboardCell };
+}
+
+let player1 = newPlayer("jhon", 0);
+let player2 = newPlayer("alex", 1);
+
+player1.markOnGameboardCell(3);
+player2.markOnGameboardCell(8);
+player1.markOnGameboardCell(4);
+player2.markOnGameboardCell(4);
+
+console.log(Gameboard.getCells());
+
+Gameboard.resetCellMarks();
+
+console.log(Gameboard.getCells());
