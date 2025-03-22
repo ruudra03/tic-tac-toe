@@ -22,18 +22,9 @@ const Gameboard = (function (MAX_LENGTH) {
   }
 
   // Return current gameboard cells
-  function getCells() {
-    let cells = gameboardCells.map(__gameboardCellsWithMark);
-
+  function getGameboardCells() {
     // Return gameboard cells
-    return cells;
-  }
-
-  function __gameboardCellsWithMark(gameboardCell, cellIndex) {
-    const cellNumber = cellIndex + 1;
-    const cellMark = gameboardCell.getMark() ? gameboardCell.getMark() : " ";
-
-    return `${cellNumber}: ${cellMark}`;
+    return gameboardCells;
   }
 
   // Reset gameboard
@@ -43,8 +34,8 @@ const Gameboard = (function (MAX_LENGTH) {
     }
   }
 
-  return { playOnCell, getCells, resetCellMarks };
-})(3);
+  return { playOnCell, getGameboardCells, resetCellMarks };
+})(3); // Play with 3*3 grid board
 
 // Gameboard cell object
 function newGameboardCell() {
@@ -100,16 +91,52 @@ function newPlayer(playerName, index) {
   return { getName, markOnGameboardCell };
 }
 
-let player1 = newPlayer("jhon", 0);
-let player2 = newPlayer("alex", 1);
+// Game controller module
+const GameController = (function (NUMBER_OF_PLAYERS) {
+  const gamePlayers = [];
+  let currentPlayer;
 
-player1.markOnGameboardCell(3);
-player2.markOnGameboardCell(8);
-player1.markOnGameboardCell(4);
-player2.markOnGameboardCell(4);
+  // Set players list
+  function setPlayers(playerNames) {
+    if (playerNames.length === NUMBER_OF_PLAYERS) {
+      for (const player of playerNames) {
+        gamePlayers.push(newPlayer(player, playerNames.indexOf(player)));
+      }
 
-console.log(Gameboard.getCells());
+      // Set first player to start
+      currentPlayer = gamePlayers[0];
+    }
+  }
+
+  // Control player moves
+  function currentPlayerMoves(cellIndex) {
+    currentPlayer.markOnGameboardCell(cellIndex);
+
+    // Change current player
+    currentPlayer = __changePlayers(gamePlayers.indexOf(currentPlayer));
+  }
+
+  // Switch current player slection
+  function __changePlayers(currentPlayerIndex) {
+    const nextPlayer = gamePlayers[currentPlayerIndex + 1];
+
+    // Check if next player exists
+    if (nextPlayer) {
+      return nextPlayer;
+    }
+
+    // Return first player
+    return gamePlayers[0];
+  }
+
+  return { setPlayers, currentPlayerMoves };
+})(2); // Play with two players
+
+GameController.setPlayers(["jhon", "alex"]);
+
+GameController.currentPlayerMoves(3);
+GameController.currentPlayerMoves(8);
+GameController.currentPlayerMoves(4);
+GameController.currentPlayerMoves(5);
 
 Gameboard.resetCellMarks();
-
-console.log(Gameboard.getCells());
