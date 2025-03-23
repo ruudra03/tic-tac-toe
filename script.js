@@ -17,8 +17,14 @@ const Gameboard = (function (MAX_LENGTH) {
       const cell = gameboardCells[cellIndex];
 
       // Mark cell with value
-      cell.markCell(playerMarker);
+      const actionResult = cell.markCell(playerMarker);
+
+      if (actionResult) {
+        return true;
+      }
     }
+
+    return false;
   }
 
   // Return current gameboard cells
@@ -46,7 +52,10 @@ function newGameboardCell() {
   function markCell(playerMarker) {
     if (!cellMark && playerMarker.match(VALID_MARKERS)) {
       cellMark = playerMarker.toUpperCase();
+      return true;
     }
+
+    return false;
   }
 
   // Get current cell value
@@ -68,6 +77,7 @@ function newGameboardCell() {
 function newPlayer(playerName, index) {
   const name = playerName;
   let playerMarker = "";
+  let markedCells = [];
 
   // Assign player mark using index
   if (index === 0) {
@@ -84,16 +94,29 @@ function newPlayer(playerName, index) {
   // Play on the gameboard
   function markOnGameboardCell(cellIndex) {
     if (playerMarker) {
-      Gameboard.playOnCell(cellIndex, playerMarker);
+      const moveResult = Gameboard.playOnCell(cellIndex, playerMarker);
+
+      // Check if move is valid
+      if (moveResult) {
+        markedCells.push(cellIndex);
+        return playerMarker;
+      }
     }
+
+    return null;
   }
 
-  return { getName, markOnGameboardCell };
+  // Return player's all marked cells
+  function getMarkedCells() {
+    return markedCells;
+  }
+
+  return { getName, markOnGameboardCell, getMarkedCells };
 }
 
 // Game controller module
 const GameController = (function (NUMBER_OF_PLAYERS) {
-  const gamePlayers = [];
+  let gamePlayers = [];
   let currentPlayer;
 
   // Set players list
@@ -110,10 +133,20 @@ const GameController = (function (NUMBER_OF_PLAYERS) {
 
   // Control player moves
   function currentPlayerMoves(cellIndex) {
-    currentPlayer.markOnGameboardCell(cellIndex);
+    const playResult = currentPlayer.markOnGameboardCell(cellIndex);
 
-    // Change current player
-    currentPlayer = __changePlayers(gamePlayers.indexOf(currentPlayer));
+    // Check if play was valid
+    if (playResult) {
+      if (__hasPlayerWon(cellIndex)) {
+        console.log(`${currentPlayer.getName()}(${playResult}) has won!`);
+
+        // Reset the game
+        resetGame();
+      } else {
+        // Change current player
+        currentPlayer = __changePlayers(gamePlayers.indexOf(currentPlayer));
+      }
+    }
   }
 
   // Switch current player slection
@@ -129,14 +162,87 @@ const GameController = (function (NUMBER_OF_PLAYERS) {
     return gamePlayers[0];
   }
 
+  // Check if there is a winner after current player moves on a cell
+  function __hasPlayerWon(cellIndexPlayed) {
+    const winningLineIndices = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+
+    const currentMarkedCells = currentPlayer.getMarkedCells();
+
+    // Check if player has marked at least 3 cells
+    if (currentMarkedCells.length >= 3) {
+      for (const winningLine of winningLineIndices) {
+        // Check if the winning line at least includes the current index played
+        if (winningLine.includes(cellIndexPlayed)) {
+          // Check if all the indices of the winning line are marked by current player
+          let indexMatchCount = 0;
+
+          for (const cellIndex of winningLine) {
+            if (currentMarkedCells.includes(cellIndex)) {
+              indexMatchCount++;
+            }
+          }
+
+          if (indexMatchCount === 3) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  // Reset Game
+  function resetGame() {
+    // Reset the gameboard
+    Gameboard.resetCellMarks();
+
+    // Remove players
+    gamePlayers = [];
+
+    // Reset current player selection
+    currentPlayer = undefined;
+  }
+
   return { setPlayers, currentPlayerMoves };
 })(2); // Play with two players
 
+// TEST GAME 1
 GameController.setPlayers(["jhon", "alex"]);
 
-GameController.currentPlayerMoves(3);
+// Round 1
+GameController.currentPlayerMoves(0);
 GameController.currentPlayerMoves(8);
-GameController.currentPlayerMoves(4);
+
+// Round 2
+GameController.currentPlayerMoves(1);
 GameController.currentPlayerMoves(5);
 
-Gameboard.resetCellMarks();
+// Round 3
+GameController.currentPlayerMoves(2); // Expected winner "X"
+
+// TEST GAME 2
+GameController.setPlayers(["cindy", "vincent"]);
+
+// Test New Round 1
+// Round 1
+GameController.currentPlayerMoves(0);
+GameController.currentPlayerMoves(2);
+
+// Round 2
+GameController.currentPlayerMoves(1);
+GameController.currentPlayerMoves(4);
+
+// Round 3
+GameController.currentPlayerMoves(4); // Expected invalid move
+GameController.currentPlayerMoves(7);
+GameController.currentPlayerMoves(6); // Expected winner "O"
