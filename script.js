@@ -1,4 +1,6 @@
-// Gameboard module
+/* 
+  Gameboard module
+ */
 const Gameboard = (function (MAX_LENGTH) {
   // Total number of cells in the gameboard
   const numberOfCells = Math.pow(MAX_LENGTH, 2);
@@ -43,7 +45,9 @@ const Gameboard = (function (MAX_LENGTH) {
   return { playOnCell, getGameboardCells, resetCellMarks };
 })(3); // Play with 3*3 grid board
 
-// Gameboard cell object
+/* 
+  Gameboard cell object
+*/
 function newGameboardCell() {
   let cellMark = "";
   const VALID_MARKERS = /x|o/i;
@@ -73,7 +77,9 @@ function newGameboardCell() {
   return { markCell, getMark, resetCell };
 }
 
-// New player object
+/* 
+  New player object
+*/
 function newPlayer(playerName, index) {
   const name = playerName;
   let playerMarker = "";
@@ -114,7 +120,9 @@ function newPlayer(playerName, index) {
   return { getName, markOnGameboardCell, getMarkedCells };
 }
 
-// Game controller module
+/* 
+  Game controller module
+*/
 const GameController = (function (NUMBER_OF_PLAYERS) {
   let gamePlayers = [];
   let currentPlayer;
@@ -215,6 +223,64 @@ const GameController = (function (NUMBER_OF_PLAYERS) {
 
   return { setPlayers, currentPlayerMoves };
 })(2); // Play with two players
+
+/* 
+  Screen controller model
+*/
+const ScreenController = (function () {
+  __initialiseHeaderDisplay();
+  __initialiseGameboardDisplay();
+
+  function __initialiseGameboardDisplay() {
+    const gameboardContainer = document.querySelector("#gameboard");
+
+    for (const cell of Gameboard.getGameboardCells()) {
+      const gameboardCellElement = document.createElement("div");
+
+      gameboardCellElement.setAttribute(
+        "id",
+        `cell-${Gameboard.getGameboardCells().indexOf(cell) + 1}`
+      );
+      gameboardCellElement.classList.add("gameboard-cell");
+
+      gameboardContainer.append(gameboardCellElement);
+    }
+  }
+
+  function __initialiseHeaderDisplay() {
+    const display = document.querySelector("#display");
+    const controls = document.querySelector("#controls");
+
+    // Add player "X" and "O"
+    const playerX = document.createElement("div");
+    playerX.setAttribute("id", "player-x");
+    playerX.classList.add("player-display");
+    playerX.textContent = "X: Player 1";
+
+    const playerY = document.createElement("div");
+    playerY.setAttribute("id", "player-y");
+    playerY.classList.add("player-display");
+    playerY.textContent = "Y: Player 2";
+
+    display.append(playerX);
+    display.append(playerY);
+
+    // Add start button
+    const startButton = document.createElement("button");
+    startButton.setAttribute("type", "button");
+    startButton.setAttribute("id", "start-btn");
+    startButton.classList.add("control-btn");
+    startButton.textContent = "START";
+
+    controls.append(startButton);
+  }
+})();
+
+/* 
+
+  TESTS
+
+*/
 
 // TEST GAME 1
 GameController.setPlayers(["jhon", "alex"]);
