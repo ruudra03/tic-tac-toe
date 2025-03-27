@@ -52,25 +52,57 @@ span {
 }
 
 #root {
-  outline: 2px solid red;
-}
-
-#header {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 5rem;
-  outline: 3px solid green;
+  flex-direction: column;
 }
 
-#gameboard {
+.title {
+  font-size: 4rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+#result-popup {
+  display: none; /* Hidden by default */
+  position: fixed;
+  z-index: 1; /* On top */
+  padding-top: 75px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+#display-container {
+  margin-bottom: 1rem;
+  font-size: 22px;
+  font-style: italic;
+  text-align: center;
+}
+
+#gameboard-container {
   display: grid;
   grid-template-rows: repeat(3, 150px);
   grid-template-columns: repeat(3, 150px);
-  outline: 3px solid yellow;
 }
 
 .gameboard-cell {
-  border: 2px solid black;
-  background-color: azure;
+  border: 0.1rem solid lightblue;
+  background-color: lightcyan;
+}
+
+#action-btns-container {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.action-btn {
+  width: max-content;
+  padding: 0.5rem;
+  border-radius: 0.8rem;
+  font-size: 18px;
+  font-weight: 900;
 }

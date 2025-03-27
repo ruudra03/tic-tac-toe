@@ -148,13 +148,25 @@ const GameController = (function (NUMBER_OF_PLAYERS) {
       if (__hasPlayerWon(cellIndex)) {
         console.log(`${currentPlayer.getName()}(${playResult}) has won!`);
 
-        // Reset the game
-        resetGame();
+        // Reset the gameboard
+        Gameboard.resetCellMarks();
+
+        // Reset current player
+        currentPlayer = gamePlayers[0];
       } else {
         // Change current player
         currentPlayer = __changePlayers(gamePlayers.indexOf(currentPlayer));
       }
+
+      return playResult;
     }
+
+    return null;
+  }
+
+  // Return playing players
+  function getCurrentPlayers() {
+    return gamePlayers;
   }
 
   // Switch current player slection
@@ -209,106 +221,57 @@ const GameController = (function (NUMBER_OF_PLAYERS) {
     return false;
   }
 
-  // Reset Game
-  function resetGame() {
-    // Reset the gameboard
-    Gameboard.resetCellMarks();
-
-    // Remove players
-    gamePlayers = [];
-
-    // Reset current player selection
-    currentPlayer = undefined;
-  }
-
-  return { setPlayers, currentPlayerMoves };
+  return { setPlayers, currentPlayerMoves, getCurrentPlayers };
 })(2); // Play with two players
 
 /* 
   Screen controller model
 */
 const ScreenController = (function () {
-  __initialiseHeaderDisplay();
-  __initialiseGameboardDisplay();
+  const display = document.querySelector("#display-container");
+  // Set start display
+  display.textContent = "Start new game.";
 
-  function __initialiseGameboardDisplay() {
-    const gameboardContainer = document.querySelector("#gameboard");
+  const gameboard = document.querySelector("#gameboard-container");
+  const gameboardCells = gameboard.childNodes;
 
-    for (const cell of Gameboard.getGameboardCells()) {
-      const gameboardCellElement = document.createElement("div");
+  // Insert gameboard cell div elements inside gameboard
+  for (const cell of Gameboard.getGameboardCells()) {
+    const gameboardCellElement = document.createElement("div");
 
-      gameboardCellElement.setAttribute(
-        "id",
-        `cell-${Gameboard.getGameboardCells().indexOf(cell) + 1}`
+    gameboardCellElement.setAttribute(
+      "data-gameboard-cell-index",
+      Gameboard.getGameboardCells().indexOf(cell)
+    );
+    gameboardCellElement.classList.add("gameboard-cell");
+
+    gameboard.append(gameboardCellElement);
+  }
+
+  // Add new game click event
+  const newGameActionBtn = document.querySelector("#new-game-btn");
+
+  // Players
+  let player1 = "X-player";
+  let player2 = "O-player";
+
+  // TODO: Player name form popup
+
+  // Start the game
+  GameController.setPlayers([player1, player2]);
+
+  // Add event listeners for each gameboard cell
+  gameboardCells.forEach(function (cell) {
+    cell.addEventListener("click", function (e) {
+      const cellIndex = parseInt(
+        cell.getAttribute("data-gameboard-cell-index")
       );
-      gameboardCellElement.classList.add("gameboard-cell");
 
-      gameboardContainer.append(gameboardCellElement);
-    }
-  }
+      const validCurrentMarker = GameController.currentPlayerMoves(cellIndex);
 
-  function __initialiseHeaderDisplay() {
-    const display = document.querySelector("#display");
-    const controls = document.querySelector("#controls");
-
-    // Add player "X" and "O"
-    const playerX = document.createElement("div");
-    playerX.setAttribute("id", "player-x");
-    playerX.classList.add("player-display");
-    playerX.textContent = "X: Player 1";
-
-    const playerY = document.createElement("div");
-    playerY.setAttribute("id", "player-y");
-    playerY.classList.add("player-display");
-    playerY.textContent = "Y: Player 2";
-
-    display.append(playerX);
-    display.append(playerY);
-
-    // Add start button
-    const startButton = document.createElement("button");
-    startButton.setAttribute("type", "button");
-    startButton.setAttribute("id", "start-btn");
-    startButton.classList.add("control-btn");
-    startButton.textContent = "START";
-
-    controls.append(startButton);
-  }
+      if (validCurrentMarker) {
+        cell.textContent = validCurrentMarker;
+      }
+    });
+  });
 })();
-
-/* 
-
-  TESTS
-
-*/
-
-// TEST GAME 1
-GameController.setPlayers(["jhon", "alex"]);
-
-// Round 1
-GameController.currentPlayerMoves(0);
-GameController.currentPlayerMoves(8);
-
-// Round 2
-GameController.currentPlayerMoves(1);
-GameController.currentPlayerMoves(5);
-
-// Round 3
-GameController.currentPlayerMoves(2); // Expected winner "X"
-
-// TEST GAME 2
-GameController.setPlayers(["cindy", "vincent"]);
-
-// Test New Round 1
-// Round 1
-GameController.currentPlayerMoves(0);
-GameController.currentPlayerMoves(2);
-
-// Round 2
-GameController.currentPlayerMoves(1);
-GameController.currentPlayerMoves(4);
-
-// Round 3
-GameController.currentPlayerMoves(4); // Expected invalid move
-GameController.currentPlayerMoves(7);
-GameController.currentPlayerMoves(6); // Expected winner "O"
